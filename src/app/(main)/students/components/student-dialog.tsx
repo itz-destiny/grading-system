@@ -13,7 +13,8 @@ import {
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
-import {useFormState, useFormStatus} from 'react-dom';
+import {useActionState} from 'react';
+import {useFormStatus} from 'react-dom';
 import {addStudent, type FormState} from '../actions';
 import {useEffect, useRef, useState} from 'react';
 import {useToast} from '@/hooks/use-toast';
@@ -32,7 +33,7 @@ function SubmitButton() {
 }
 
 export function AddStudentDialog({children}: {children: React.ReactNode}) {
-  const [state, formAction] = useFormState(addStudent, initialState);
+  const [state, formAction] = useActionState(addStudent, initialState);
   const [isOpen, setIsOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const {toast} = useToast();
