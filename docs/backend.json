@@ -1,0 +1,93 @@
+
+{
+  "entities": {
+    "student": {
+      "title": "Student",
+      "description": "Represents a student enrolled in the class.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the student."
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the student."
+        },
+        "avatar": {
+          "type": "string",
+          "description": "Identifier for the student's avatar image."
+        }
+      },
+      "required": ["name", "avatar"]
+    },
+    "assignment": {
+      "title": "Assignment",
+      "description": "Represents a class assignment.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the assignment."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the assignment."
+        },
+        "dueDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The due date of the assignment."
+        },
+        "maxPoints": {
+          "type": "number",
+          "description": "The maximum points possible for the assignment."
+        }
+      },
+      "required": ["name", "dueDate", "maxPoints"]
+    },
+    "grade": {
+      "title": "Grade",
+      "description": "Represents a student's grade on a specific assignment.",
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "description": "Reference to the student's ID."
+        },
+        "assignmentId": {
+          "type": "string",
+          "description": "Reference to the assignment's ID."
+        },
+        "score": {
+          "type": "number",
+          "description": "The score the student received."
+        }
+      },
+      "required": ["studentId", "assignmentId", "score"]
+    }
+  },
+  "auth": {
+    "providers": []
+  },
+  "firestore": {
+    "/students/{studentId}": {
+      "schema": {
+        "$ref": "#/entities/student"
+      },
+      "description": "Stores individual student documents."
+    },
+    "/assignments/{assignmentId}": {
+      "schema": {
+        "$ref": "#/entities/assignment"
+      },
+      "description": "Stores individual assignment documents."
+    },
+    "/grades/{gradeId}": {
+      "schema": {
+        "$ref": "#/entities/grade"
+      },
+      "description": "Stores individual grade documents."
+    }
+  }
+}
