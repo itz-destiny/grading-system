@@ -1,19 +1,42 @@
 'use server';
 
 import {collection, addDoc} from 'firebase/firestore';
+import {z} from 'zod';
 import {errorEmitter} from '@/firebase/error-emitter';
 import {FirestorePermissionError} from '@/firebase/errors';
 import {initializeFirebase} from '@/firebase';
 import {PlaceHolderImages} from '@/lib/placeholder-images';
 
-export async function addStudent(name: string): Promise<{
-  success: boolean;
+const studentSchema = z.object({
+  name: z.string().min(2, {message: 'Name must be at least 2 characters.'}),
+});
+
+export type FormState = {
   message: string;
-  studentId?: string;
-}> {
-  if (!name.trim()) {
-    return {success: false, message: 'Student name cannot be empty.'};
+  success: boolean;
+  errors?: {
+    name?: string[];
+  };
+};
+
+export async function addStudent(
+  prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  
+  const validatedFields = studentSchema.safeParse({
+    name: formData.get('name'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      message: 'Failed to add student.',
+      success: false,
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
   }
+  
+  const { name } = validatedFields.data;
 
   const {firestore} = initializeFirebase();
 
@@ -27,20 +50,18 @@ export async function addStudent(name: string): Promise<{
 
   try {
     const docRef = await addDoc(collection(firestore, 'students'), studentData);
-    // Since we are using real-time listeners on the client, we don't need revalidatePath.
-    // The client UI will update automatically.
     return {
       success: true,
-      message: 'Student added successfully.',
-      studentId: docRef.id,
+      message: `Student "${name}" added successfully.`,
     };
   } catch (error) {
+    // This is not a security rule error, but a general one.
+    // We will emit a generic error that can be handled if needed,
+    // but for now we just log it and return a failure state.
     console.error('Error adding student:', error);
-    // In a real app, you might want to create and emit a more specific error.
-    // For now, we'll return a generic error message.
-    return {
+     return {
       success: false,
-      message: 'Failed to add student. Please check permissions.',
+      message: 'Failed to add student. Please try again.',
     };
   }
 }

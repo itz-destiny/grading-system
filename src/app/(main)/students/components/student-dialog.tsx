@@ -13,47 +13,50 @@ import {
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
-import {addStudent} from '../actions';
-import {useRef, useState, useTransition} from 'react';
+import {addStudent, type FormState} from '../actions';
+import {useEffect, useRef, useState} from 'react';
+import {useActionState} from 'react';
+import {useFormStatus} from 'react-dom';
 import {useToast} from '@/hooks/use-toast';
 
-function SubmitButton({isPending}: {isPending: boolean}) {
+const initialState: FormState = {
+  message: '',
+  success: false,
+};
+
+function SubmitButton() {
+  const {pending} = useFormStatus();
   return (
-    <Button type="submit" disabled={isPending}>
-      {isPending ? 'Adding...' : 'Add Student'}
+    <Button type="submit" disabled={pending}>
+      {pending ? 'Adding...' : 'Add Student'}
     </Button>
   );
 }
 
 export function AddStudentDialog({children}: {children: React.ReactNode}) {
+  const [state, formAction] = useActionState(addStudent, initialState);
   const [isOpen, setIsOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const {toast} = useToast();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    startTransition(async () => {
-      const result = await addStudent(name);
-      if (result.success) {
+  useEffect(() => {
+    if (state.message) {
+      if (state.success) {
         toast({
           title: 'Success',
-          description: `Student "${name}" has been added.`,
+          description: state.message,
         });
         setIsOpen(false);
-        setName('');
         formRef.current?.reset();
       } else {
         toast({
           title: 'Error Adding Student',
-          description: result.message || 'An unexpected error occurred.',
+          description: state.message,
           variant: 'destructive',
         });
       }
-    });
-  };
+    }
+  }, [state, toast]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -65,7 +68,7 @@ export function AddStudentDialog({children}: {children: React.ReactNode}) {
             Enter the details for the new student. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-        <form ref={formRef} onSubmit={handleSubmit} className="grid gap-4 py-4">
+        <form ref={formRef} action={formAction} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
               Name
@@ -73,12 +76,15 @@ export function AddStudentDialog({children}: {children: React.ReactNode}) {
             <Input
               id="name"
               name="name"
-              value={name}
-              onChange={e => setName(e.target.value)}
               className="col-span-3"
               required
             />
           </div>
+           {state.errors?.name && (
+            <p className="text-sm text-destructive col-start-2 col-span-3 -mt-2">
+              {state.errors.name.join(', ')}
+            </p>
+          )}
 
           <DialogFooter>
             <DialogClose asChild>
@@ -86,7 +92,7 @@ export function AddStudentDialog({children}: {children: React.ReactNode}) {
                 Cancel
               </Button>
             </DialogClose>
-            <SubmitButton isPending={isPending} />
+            <SubmitButton />
           </DialogFooter>
         </form>
       </DialogContent>
