@@ -1,4 +1,5 @@
 import type {Student, Assignment, Grade} from './types';
+import {parseISO} from 'date-fns';
 
 export const getStudentAverage = (
   studentId: string,
@@ -42,4 +43,21 @@ export const getAssignmentAverage = (
     0
   );
   return (totalScore / (assignmentGrades.length * assignment.maxPoints)) * 100;
+};
+
+export const getAssignmentAveragesForChart = (
+  grades: Grade[],
+  assignments: Assignment[]
+) => {
+  const sortedAssignments = [...assignments].sort(
+    (a, b) => parseISO(a.dueDate).getTime() - parseISO(b.dueDate).getTime()
+  );
+
+  return sortedAssignments.map(assignment => {
+    const average = getAssignmentAverage(assignment.id, grades, assignment);
+    return {
+      name: assignment.name,
+      average: parseFloat(average.toFixed(1)),
+    };
+  });
 };

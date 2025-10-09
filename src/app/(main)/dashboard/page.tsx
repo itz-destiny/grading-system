@@ -5,28 +5,17 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {PageHeader} from '@/components/page-header';
 import {students, assignments, grades} from '@/lib/data';
-import {getClassAverage} from '@/lib/helpers';
+import {getClassAverage, getAssignmentAveragesForChart} from '@/lib/helpers';
 import {Users, BookMarked, Percent} from 'lucide-react';
-import {format, isFuture, parseISO} from 'date-fns';
+import {ClassPerformanceChart} from './components/class-performance-chart';
 
 export default function DashboardPage() {
   const totalStudents = students.length;
   const totalAssignments = assignments.length;
   const classAverage = getClassAverage(grades, assignments);
-  const upcomingAssignments = assignments
-    .filter(a => isFuture(parseISO(a.dueDate)))
-    .sort((a, b) => parseISO(a.dueDate).getTime() - parseISO(b.dueDate).getTime())
-    .slice(0, 5);
+  const chartData = getAssignmentAveragesForChart(grades, assignments);
 
   return (
     <>
@@ -78,40 +67,13 @@ export default function DashboardPage() {
       <div className="p-4 sm:p-6 md:p-8 pt-0">
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming Deadlines</CardTitle>
+            <CardTitle>Class Performance</CardTitle>
             <CardDescription>
-              Assignments that are due soon.
+              Average score for each assignment.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Assignment</TableHead>
-                  <TableHead className="text-right">Due Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {upcomingAssignments.length > 0 ? (
-                  upcomingAssignments.map(assignment => (
-                    <TableRow key={assignment.id}>
-                      <TableCell className="font-medium">
-                        {assignment.name}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {format(parseISO(assignment.dueDate), 'PPP')}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={2} className="text-center">
-                      No upcoming deadlines.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <ClassPerformanceChart data={chartData} />
           </CardContent>
         </Card>
       </div>
