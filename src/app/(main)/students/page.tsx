@@ -2,17 +2,16 @@
 
 import {PageHeader} from '@/components/page-header';
 import {Button} from '@/components/ui/button';
-import {assignments, grades, students as mockStudents} from '@/lib/data';
 import {getStudentAverage} from '@/lib/helpers';
 import {PlusCircle} from 'lucide-react';
 import {StudentsTable} from './components/students-table';
 import {AddStudentDialog} from './components/student-dialog';
 import type {Student} from '@/lib/types';
-import {useState} from 'react';
 import {PlaceHolderImages} from '@/lib/placeholder-images';
+import {useData} from '@/context/data-provider';
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState<Student[]>(mockStudents);
+  const {students, addStudent, grades, assignments} = useData();
 
   const handleAddStudent = (name: string) => {
     const randomAvatar =
@@ -22,7 +21,7 @@ export default function StudentsPage() {
       name,
       avatar: randomAvatar.id,
     };
-    setStudents(prevStudents => [...prevStudents, newStudent]);
+    addStudent(newStudent);
   };
 
   const studentsWithGrades =

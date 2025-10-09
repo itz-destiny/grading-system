@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Card,
   CardContent,
@@ -6,12 +8,13 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import {PageHeader} from '@/components/page-header';
-import {students, assignments, grades} from '@/lib/data';
 import {getClassAverage, getAssignmentAveragesForChart} from '@/lib/helpers';
 import {Users, BookMarked, Percent} from 'lucide-react';
 import {ClassPerformanceChart} from './components/class-performance-chart';
+import {useData} from '@/context/data-provider';
 
 export default function DashboardPage() {
+  const {students, assignments, grades} = useData();
   const totalStudents = students.length;
   const totalAssignments = assignments.length;
   const classAverage = getClassAverage(grades, assignments);

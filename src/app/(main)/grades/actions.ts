@@ -11,6 +11,8 @@ export async function updateGrades(
   
   console.log('Updating grades:', data);
 
+  // Since we are moving to client-side state management, revalidation is not strictly necessary for immediate UI updates,
+  // but it's kept here in case server-side data fetching is reintroduced.
   revalidatePath('/grades');
   revalidatePath('/dashboard');
   revalidatePath('/students');

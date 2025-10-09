@@ -1,12 +1,16 @@
+'use client';
+
 import {PageHeader} from '@/components/page-header';
 import {Button} from '@/components/ui/button';
-import {assignments, grades} from '@/lib/data';
 import {getAssignmentAverage} from '@/lib/helpers';
 import {PlusCircle} from 'lucide-react';
 import {AssignmentsTable} from './components/assignments-table';
 import {AddAssignmentDialog} from './components/assignment-dialog';
+import {useData} from '@/context/data-provider';
 
 export default function AssignmentsPage() {
+  const {assignments, grades} = useData();
+
   const assignmentsWithAverages = assignments.map(assignment => ({
     ...assignment,
     classAverage: getAssignmentAverage(assignment.id, grades, assignment),

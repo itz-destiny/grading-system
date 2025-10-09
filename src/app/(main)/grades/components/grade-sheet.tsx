@@ -18,24 +18,16 @@ import {
 import {Input} from '@/components/ui/input';
 import {Button} from '@/components/ui/button';
 import type {Student, Assignment, Grade} from '@/lib/types';
-import {useState, useTransition} from 'react';
-import {updateGrades} from '../actions';
+import {useState, useTransition, useEffect} from 'react';
 import {useToast} from '@/hooks/use-toast';
+import {useData} from '@/context/data-provider';
 
-interface GradeSheetProps {
-  students: Student[];
-  assignments: Assignment[];
-  initialGrades: Grade[];
-}
-
-export function GradeSheet({
-  students,
-  assignments,
-  initialGrades,
-}: GradeSheetProps) {
+export function GradeSheet() {
+  const {students, assignments, grades: initialGrades, updateGrades} = useData();
   const {toast} = useToast();
   const [isPending, startTransition] = useTransition();
-  const [grades, setGrades] = useState<Record<string, string>>(() => {
+
+  const [localGrades, setLocalGrades] = useState<Record<string, string>>(() => {
     const gradeMap: Record<string, string> = {};
     initialGrades.forEach(g => {
       gradeMap[`${g.studentId}-${g.assignmentId}`] = String(g.score);
@@ -43,42 +35,59 @@ export function GradeSheet({
     return gradeMap;
   });
 
+  useEffect(() => {
+    const gradeMap: Record<string, string> = {};
+    initialGrades.forEach(g => {
+      gradeMap[`${g.studentId}-${g.assignmentId}`] = String(g.score);
+    });
+    setLocalGrades(gradeMap);
+  }, [initialGrades]);
+
   const handleGradeChange = (
     studentId: string,
     assignmentId: string,
     score: string
   ) => {
-    setGrades(prev => ({
+    setLocalGrades(prev => ({
       ...prev,
       [`${studentId}-${assignmentId}`]: score,
     }));
   };
 
   const handleSaveChanges = () => {
-    startTransition(async () => {
-      const gradesToUpdate: Record<string, number> = {};
-      for (const key in grades) {
-        const score = parseFloat(grades[key]);
-        if (!isNaN(score)) {
-          gradesToUpdate[key] = score;
+    startTransition(() => {
+      const newGrades: Grade[] = [];
+      const updatedGradeKeys = new Set<string>();
+
+      for (const key in localGrades) {
+        const [studentId, assignmentId] = key.split('-');
+        const scoreValue = localGrades[key];
+        // Only add if there is a score
+        if (scoreValue !== '' && scoreValue !== null && scoreValue !== undefined) {
+          const score = parseFloat(scoreValue);
+          if (!isNaN(score)) {
+            newGrades.push({ studentId, assignmentId, score });
+            updatedGradeKeys.add(`${studentId}-${assignmentId}`);
+          }
         }
       }
 
-      try {
-        const result = await updateGrades(gradesToUpdate);
-        toast({
-          title: 'Success',
-          description: result.message,
-        });
-      } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'Failed to update grades.',
-          variant: 'destructive',
-        });
-      }
+      // Add back any initial grades that were not in the localGrades map
+      initialGrades.forEach(grade => {
+        if (!updatedGradeKeys.has(`${grade.studentId}-${grade.assignmentId}`)) {
+          newGrades.push(grade);
+        }
+      });
+
+      updateGrades(newGrades);
+      
+      toast({
+        title: 'Success',
+        description: 'Grades updated successfully.',
+      });
     });
   };
+
 
   return (
     <Card>
@@ -120,7 +129,7 @@ export function GradeSheet({
                         <Input
                           type="number"
                           placeholder="-"
-                          value={grades[gradeKey] ?? ''}
+                          value={localGrades[gradeKey] ?? ''}
                           onChange={e =>
                             handleGradeChange(
                               student.id,

@@ -1,8 +1,11 @@
+'use client';
+
 import {PageHeader} from '@/components/page-header';
-import {students, assignments, grades, rubric} from '@/lib/data';
 import {StudentReportCard} from './components/student-report-card';
+import {useData} from '@/context/data-provider';
 
 export default function ReportsPage() {
+  const {students, assignments, grades, rubric} = useData();
   return (
     <>
       <PageHeader
