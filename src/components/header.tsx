@@ -47,7 +47,7 @@ export function Header() {
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <Link href="#" legacyBehavior passHref>
+            <Link href="#">
               <DropdownMenuItem>Logout</DropdownMenuItem>
             </Link>
           </DropdownMenuContent>
