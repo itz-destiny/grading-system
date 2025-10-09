@@ -13,7 +13,11 @@ import {z} from 'genkit';
 
 const GenerateStudentPerformanceOverviewInputSchema = z.object({
   studentName: z.string().describe('The name of the student.'),
-  grades: z.record(z.number()).describe('A record of grades for the student, with assignment names as keys and grades as values.'),
+  grades: z
+    .record(z.number())
+    .describe(
+      'A record of grades for the student, with assignment names as keys and grades as values.'
+    ),
   rubric: z.string().describe('The rubric used for grading the assignments.'),
 });
 export type GenerateStudentPerformanceOverviewInput = z.infer<
@@ -23,7 +27,7 @@ export type GenerateStudentPerformanceOverviewInput = z.infer<
 const GenerateStudentPerformanceOverviewOutputSchema = z.object({
   performanceOverview: z
     .string()
-    .describe('A brief overview of the student\'s performance.'),
+    .describe("A brief overview of the student's performance."),
 });
 export type GenerateStudentPerformanceOverviewOutput = z.infer<
   typeof GenerateStudentPerformanceOverviewOutputSchema
@@ -39,14 +43,18 @@ const prompt = ai.definePrompt({
   name: 'generateStudentPerformanceOverviewPrompt',
   input: {schema: GenerateStudentPerformanceOverviewInputSchema},
   output: {schema: GenerateStudentPerformanceOverviewOutputSchema},
-  prompt: `You are a helpful teacher providing feedback to students.
+  prompt: `You are a helpful teacher providing specific, data-driven feedback to a student.
 
-  Based on the student's grades and the rubric used, provide a brief performance overview for the student.
+Analyze the student's grades on each assignment and use the provided rubric to create a personalized performance overview. Mention specific assignments where the student did well or where there is room for improvement.
 
-  Student Name: {{{studentName}}}
-  Grades: {{{grades}}}
-  Rubric: {{{rubric}}}
-  Performance Overview:`, // The performance overview is what the LLM will be generating.
+Student Name: {{{studentName}}}
+
+Grades (JSON format):
+{{jsonStringify grades}}
+
+Rubric:
+{{{rubric}}}
+`,
 });
 
 const generateStudentPerformanceOverviewFlow = ai.defineFlow(
