@@ -20,8 +20,7 @@ import {Button} from '@/components/ui/button';
 import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
 import {PlaceHolderImages} from '@/lib/placeholder-images';
 import type {Student} from '@/lib/types';
-import {useActionState} from 'react';
-import {useFormStatus} from 'react-dom';
+import {useFormState, useFormStatus} from 'react-dom';
 import {generateReport, type FormState} from '../actions';
 import {Sparkles, LoaderCircle} from 'lucide-react';
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
@@ -59,7 +58,7 @@ export function StudentReportCard({
   grades,
   rubric,
 }: StudentReportCardProps) {
-  const [state, formAction] = useActionState(generateReport, initialState);
+  const [state, formAction] = useFormState(generateReport, initialState);
   const avatarPlaceholder = PlaceHolderImages.find(p => p.id === student.avatar);
   const gradesForAI = grades.reduce(
     (acc, grade) => {

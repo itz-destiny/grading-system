@@ -13,8 +13,7 @@ import {
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
-import {useFormStatus} from 'react-dom';
-import {useActionState} from 'react';
+import {useFormStatus, useFormState} from 'react-dom';
 import {addAssignment, type FormState} from '../actions';
 import {useEffect, useRef, useState} from 'react';
 import {useToast} from '@/hooks/use-toast';
@@ -38,7 +37,7 @@ function SubmitButton() {
 }
 
 export function AddAssignmentDialog({children}: {children: React.ReactNode}) {
-  const [state, formAction] = useActionState(addAssignment, initialState);
+  const [state, formAction] = useFormState(addAssignment, initialState);
   const [isOpen, setIsOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>();
   const formRef = useRef<HTMLFormElement>(null);
