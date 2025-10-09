@@ -14,9 +14,8 @@ import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {addStudent} from '../actions';
-import {useEffect, useRef, useState, useTransition} from 'react';
+import {useRef, useState, useTransition} from 'react';
 import {useToast} from '@/hooks/use-toast';
-import {useFirestore} from '@/firebase';
 
 function SubmitButton({isPending}: {isPending: boolean}) {
   return (
@@ -32,30 +31,13 @@ export function AddStudentDialog({children}: {children: React.ReactNode}) {
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const {toast} = useToast();
-  const firestore = useFirestore();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!firestore) {
-      toast({
-        title: 'Error',
-        description: 'Firestore is not available.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    if (!name.trim()) {
-      toast({
-        title: 'Error',
-        description: 'Student name cannot be empty.',
-        variant: 'destructive',
-      });
-      return;
-    }
 
     startTransition(async () => {
-      try {
-        await addStudent(name, firestore);
+      const result = await addStudent(name);
+      if (result.success) {
         toast({
           title: 'Success',
           description: `Student "${name}" has been added.`,
@@ -63,11 +45,10 @@ export function AddStudentDialog({children}: {children: React.ReactNode}) {
         setIsOpen(false);
         setName('');
         formRef.current?.reset();
-      } catch (error: any) {
+      } else {
         toast({
           title: 'Error Adding Student',
-          description:
-            error.message || 'An unexpected error occurred.',
+          description: result.message || 'An unexpected error occurred.',
           variant: 'destructive',
         });
       }
@@ -93,7 +74,7 @@ export function AddStudentDialog({children}: {children: React.ReactNode}) {
               id="name"
               name="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={e => setName(e.target.value)}
               className="col-span-3"
               required
             />
