@@ -13,48 +13,66 @@ import {
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
-import {useFormStatus} from 'react-dom';
-import {addStudent, type FormState} from '../actions';
-import {useEffect, useRef, useState, useActionState} from 'react';
+import {addStudent} from '../actions';
+import {useEffect, useRef, useState, useTransition} from 'react';
 import {useToast} from '@/hooks/use-toast';
+import {useFirestore} from '@/firebase';
 
-const initialState: FormState = {
-  message: '',
-};
-
-function SubmitButton() {
-  const {pending} = useFormStatus();
+function SubmitButton({isPending}: {isPending: boolean}) {
   return (
-    <Button type="submit" disabled={pending}>
-      {pending ? 'Adding...' : 'Add Student'}
+    <Button type="submit" disabled={isPending}>
+      {isPending ? 'Adding...' : 'Add Student'}
     </Button>
   );
 }
 
 export function AddStudentDialog({children}: {children: React.ReactNode}) {
-  const [state, formAction] = useActionState(addStudent, initialState);
   const [isOpen, setIsOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const {toast} = useToast();
+  const firestore = useFirestore();
 
-  useEffect(() => {
-    if (state.message) {
-      if (state.errors) {
-        toast({
-          title: 'Error',
-          description: state.message,
-          variant: 'destructive',
-        });
-      } else {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!firestore) {
+      toast({
+        title: 'Error',
+        description: 'Firestore is not available.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!name.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Student name cannot be empty.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        await addStudent(name, firestore);
         toast({
           title: 'Success',
-          description: state.message,
+          description: `Student "${name}" has been added.`,
         });
         setIsOpen(false);
+        setName('');
         formRef.current?.reset();
+      } catch (error: any) {
+        toast({
+          title: 'Error Adding Student',
+          description:
+            error.message || 'An unexpected error occurred.',
+          variant: 'destructive',
+        });
       }
-    }
-  }, [state, toast]);
+    });
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -66,7 +84,7 @@ export function AddStudentDialog({children}: {children: React.ReactNode}) {
             Enter the details for the new student. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-        <form action={formAction} ref={formRef} className="grid gap-4 py-4">
+        <form ref={formRef} onSubmit={handleSubmit} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
               Name
@@ -74,15 +92,12 @@ export function AddStudentDialog({children}: {children: React.ReactNode}) {
             <Input
               id="name"
               name="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="col-span-3"
               required
             />
           </div>
-          {state.errors?.name && (
-            <p className="text-sm text-destructive col-start-2 col-span-3">
-              {state.errors.name.join(', ')}
-            </p>
-          )}
 
           <DialogFooter>
             <DialogClose asChild>
@@ -90,7 +105,7 @@ export function AddStudentDialog({children}: {children: React.ReactNode}) {
                 Cancel
               </Button>
             </DialogClose>
-            <SubmitButton />
+            <SubmitButton isPending={isPending} />
           </DialogFooter>
         </form>
       </DialogContent>

@@ -1,40 +1,44 @@
-'use server';
+'use client';
 
-import {z} from 'zod';
+import {collection, addDoc, Firestore} from 'firebase/firestore';
 import {revalidatePath} from 'next/cache';
+import {firestore} from '@/firebase/index.ts';
+import {errorEmitter} from '@/firebase/error-emitter';
+import {FirestorePermissionError} from '@/firebase/errors';
+import type {Student} from '@/lib/types';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
-const studentSchema = z.object({
-  name: z.string().min(2, {message: 'Name must be at least 2 characters.'}),
-});
-
-export type FormState = {
-  message: string;
-  errors?: {
-    name?: string[];
-  };
-};
 
 export async function addStudent(
-  prevState: FormState,
-  formData: FormData
-): Promise<FormState> {
-  const validatedFields = studentSchema.safeParse({
-    name: formData.get('name'),
-  });
+  name: string,
+  db: Firestore
+): Promise<void> {
 
-  if (!validatedFields.success) {
-    return {
-      message: 'Failed to add student.',
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
+  if (!name) {
+    throw new Error('Student name cannot be empty.');
   }
 
-  // Here you would typically add the student to your database.
-  // For this demo, we'll just log it to the console.
-  console.log('New student added:', validatedFields.data.name);
+  const randomAvatar = PlaceHolderImages[Math.floor(Math.random() * PlaceHolderImages.length)];
 
-  // Revalidate the path to see the new student (if data source was updated)
-  revalidatePath('/students');
+  const studentData = {
+    name,
+    avatar: randomAvatar.id,
+  };
 
-  return {message: 'Successfully added student.'};
+  try {
+    const docRef = await addDoc(collection(db, 'students'), studentData);
+    console.log('Student added with ID: ', docRef.id);
+    // In a real-world scenario with server-side rendering and actions,
+    // you might use revalidatePath('/students') here.
+    // Since we are using real-time listeners, the UI will update automatically.
+  } catch (e: any) {
+    const permissionError = new FirestorePermissionError({
+      path: '/students',
+      operation: 'create',
+      requestResourceData: studentData,
+    });
+    errorEmitter.emit('permission-error', permissionError);
+    // Also re-throw the original error if you want to handle it further up the chain
+    throw e;
+  }
 }
