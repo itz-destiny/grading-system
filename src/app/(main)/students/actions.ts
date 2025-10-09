@@ -1,14 +1,9 @@
 'use server';
 
-import {collection, addDoc} from 'firebase/firestore';
-import {z} from 'zod';
-import {errorEmitter} from '@/firebase/error-emitter';
-import {FirestorePermissionError} from '@/firebase/errors';
-import {initializeFirebase} from '@/firebase';
-import {PlaceHolderImages} from '@/lib/placeholder-images';
+import { z } from 'zod';
 
 const studentSchema = z.object({
-  name: z.string().min(2, {message: 'Name must be at least 2 characters.'}),
+  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
 });
 
 export type FormState = {
@@ -23,7 +18,6 @@ export async function addStudent(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  
   const validatedFields = studentSchema.safeParse({
     name: formData.get('name'),
   });
@@ -35,33 +29,15 @@ export async function addStudent(
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
-  
+
   const { name } = validatedFields.data;
 
-  const {firestore} = initializeFirebase();
+  // This is where you would add the student to a database.
+  // Since we are using mock data, we will just log it.
+  console.log(`Adding student: ${name}`);
 
-  const randomAvatar =
-    PlaceHolderImages[Math.floor(Math.random() * PlaceHolderImages.length)];
-
-  const studentData = {
-    name,
-    avatar: randomAvatar.id,
+  return {
+    success: true,
+    message: `Student "${name}" added successfully.`,
   };
-
-  try {
-    const docRef = await addDoc(collection(firestore, 'students'), studentData);
-    return {
-      success: true,
-      message: `Student "${name}" added successfully.`,
-    };
-  } catch (error) {
-    // This is not a security rule error, but a general one.
-    // We will emit a generic error that can be handled if needed,
-    // but for now we just log it and return a failure state.
-    console.error('Error adding student:', error);
-     return {
-      success: false,
-      message: 'Failed to add student. Please try again.',
-    };
-  }
 }

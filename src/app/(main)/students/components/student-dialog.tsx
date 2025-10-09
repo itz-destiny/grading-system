@@ -13,50 +13,47 @@ import {
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
-import {addStudent, type FormState} from '../actions';
 import {useEffect, useRef, useState} from 'react';
-import {useActionState} from 'react';
-import {useFormStatus} from 'react-dom';
 import {useToast} from '@/hooks/use-toast';
 
-const initialState: FormState = {
-  message: '',
-  success: false,
-};
-
-function SubmitButton() {
-  const {pending} = useFormStatus();
-  return (
-    <Button type="submit" disabled={pending}>
-      {pending ? 'Adding...' : 'Add Student'}
-    </Button>
-  );
-}
-
-export function AddStudentDialog({children}: {children: React.ReactNode}) {
-  const [state, formAction] = useActionState(addStudent, initialState);
+export function AddStudentDialog({
+  children,
+  onAddStudent,
+}: {
+  children: React.ReactNode;
+  onAddStudent: (name: string) => void;
+}) {
   const [isOpen, setIsOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
   const {toast} = useToast();
 
-  useEffect(() => {
-    if (state.message) {
-      if (state.success) {
-        toast({
-          title: 'Success',
-          description: state.message,
-        });
-        setIsOpen(false);
-        formRef.current?.reset();
-      } else {
-        toast({
-          title: 'Error Adding Student',
-          description: state.message,
-          variant: 'destructive',
-        });
-      }
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (name.length < 2) {
+      setError('Name must be at least 2 characters.');
+      return;
     }
-  }, [state, toast]);
+    
+    onAddStudent(name);
+
+    toast({
+      title: 'Success',
+      description: `Student "${name}" added successfully.`,
+    });
+    
+    setIsOpen(false);
+    setName('');
+    setError('');
+  };
+  
+  useEffect(() => {
+    if (!isOpen) {
+      setName('');
+      setError('');
+    }
+  }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -68,7 +65,7 @@ export function AddStudentDialog({children}: {children: React.ReactNode}) {
             Enter the details for the new student. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-        <form ref={formRef} action={formAction} className="grid gap-4 py-4">
+        <form ref={formRef} onSubmit={handleSubmit} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
               Name
@@ -76,13 +73,15 @@ export function AddStudentDialog({children}: {children: React.ReactNode}) {
             <Input
               id="name"
               name="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="col-span-3"
               required
             />
           </div>
-           {state.errors?.name && (
+          {error && (
             <p className="text-sm text-destructive col-start-2 col-span-3 -mt-2">
-              {state.errors.name.join(', ')}
+              {error}
             </p>
           )}
 
@@ -92,7 +91,7 @@ export function AddStudentDialog({children}: {children: React.ReactNode}) {
                 Cancel
               </Button>
             </DialogClose>
-            <SubmitButton />
+            <Button type="submit">Add Student</Button>
           </DialogFooter>
         </form>
       </DialogContent>
