@@ -7,7 +7,11 @@ export const getStudentAverage = (
   assignments: Assignment[]
 ) => {
   const studentGrades = grades.filter(grade => grade.studentId === studentId);
-  if (studentGrades.length === 0) return 0;
+  const relevantAssignments = assignments.filter(assignment =>
+    studentGrades.some(grade => grade.assignmentId === assignment.id)
+  );
+
+  if (relevantAssignments.length === 0) return 0;
 
   const totalPoints = studentGrades.reduce((acc, grade) => {
     const assignment = assignments.find(a => a.id === grade.assignmentId);
@@ -15,7 +19,7 @@ export const getStudentAverage = (
     return acc + (grade.score / assignment.maxPoints) * 100;
   }, 0);
 
-  return totalPoints / studentGrades.length;
+  return totalPoints / relevantAssignments.length;
 };
 
 export const getClassAverage = (grades: Grade[], assignments: Assignment[]) => {
@@ -60,4 +64,12 @@ export const getAssignmentAveragesForChart = (
       average: parseFloat(average.toFixed(1)),
     };
   });
+};
+
+export const getLetterGrade = (percentage: number): string => {
+  if (percentage >= 90) return 'A';
+  if (percentage >= 80) return 'B';
+  if (percentage >= 70) return 'C';
+  if (percentage >= 60) return 'D';
+  return 'F';
 };

@@ -22,7 +22,11 @@ import {useState, useTransition, useEffect} from 'react';
 import {useToast} from '@/hooks/use-toast';
 import {useData} from '@/context/data-provider';
 
-export function GradeSheet() {
+interface GradeSheetProps {
+  onSave: () => void;
+}
+
+export function GradeSheet({ onSave }: GradeSheetProps) {
   const {students, assignments, grades: initialGrades, updateGrades} = useData();
   const {toast} = useToast();
   const [isPending, startTransition] = useTransition();
@@ -80,6 +84,7 @@ export function GradeSheet() {
       });
 
       updateGrades(newGrades);
+      onSave();
       
       toast({
         title: 'Success',
