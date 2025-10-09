@@ -16,7 +16,7 @@ interface DataContextType {
   rubric: string;
   addStudent: (student: Student) => void;
   updateGrades: (newGrades: Grade[]) => void;
-  // Add other update functions as needed
+  addAssignment: (assignment: Assignment) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -35,9 +35,13 @@ export const DataProvider = ({children}: {children: ReactNode}) => {
     setGrades(newGrades);
   };
 
+  const addAssignment = (assignment: Assignment) => {
+    setAssignments(prev => [...prev, assignment]);
+  };
+
 
   return (
-    <DataContext.Provider value={{students, assignments, grades, rubric, addStudent, updateGrades}}>
+    <DataContext.Provider value={{students, assignments, grades, rubric, addStudent, updateGrades, addAssignment}}>
       {children}
     </DataContext.Provider>
   );
