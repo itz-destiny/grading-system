@@ -13,10 +13,10 @@ import {z} from 'genkit';
 
 const GenerateStudentPerformanceOverviewInputSchema = z.object({
   studentName: z.string().describe('The name of the student.'),
-  grades: z
-    .record(z.number())
+  gradesJSON: z
+    .string()
     .describe(
-      'A record of grades for the student, with assignment names as keys and grades as values.'
+      'A JSON string of grades for the student, with assignment names as keys and grades as values.'
     ),
   rubric: z.string().describe('The rubric used for grading the assignments.'),
 });
@@ -50,7 +50,7 @@ Analyze the student's grades on each assignment and use the provided rubric to c
 Student Name: {{{studentName}}}
 
 Grades (JSON format):
-{{jsonStringify grades}}
+{{{gradesJSON}}}
 
 Rubric:
 {{{rubric}}}

@@ -5,7 +5,7 @@ import {z} from 'zod';
 
 const reportSchema = z.object({
   studentName: z.string(),
-  grades: z.string().transform(val => JSON.parse(val)),
+  grades: z.string(), // Keep as string, it's already stringified
   rubric: z.string(),
 });
 
@@ -33,7 +33,7 @@ export async function generateReport(
 
     const result = await generateStudentPerformanceOverview({
       studentName,
-      grades,
+      gradesJSON: grades, // Pass the JSON string directly
       rubric,
     });
 
