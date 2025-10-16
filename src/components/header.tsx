@@ -1,3 +1,5 @@
+'use client';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,8 +13,24 @@ import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
 import {SidebarTrigger} from '@/components/ui/sidebar';
 import {User} from 'lucide-react';
 import Link from 'next/link';
+import {useUser} from '@/hooks/use-user';
+import {getAuth, signOut} from 'firebase/auth';
+import {useRouter} from 'next/navigation';
 
 export function Header() {
+  const {user} = useUser();
+  const router = useRouter();
+  const auth = getAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
       <div className="md:hidden">
@@ -24,7 +42,7 @@ export function Header() {
             <Button variant="ghost" className="relative h-9 w-9 rounded-full">
               <Avatar className="h-9 w-9">
                 <AvatarImage
-                  src="https://picsum.photos/seed/teacher/100/100"
+                  src={user?.photoURL ?? "https://picsum.photos/seed/teacher/100/100"}
                   alt="Teacher avatar"
                   data-ai-hint="teacher avatar"
                 />
@@ -37,9 +55,11 @@ export function Header() {
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Teacher</p>
+                <p className="text-sm font-medium leading-none">
+                  {user?.displayName ?? 'Teacher'}
+                </p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  teacher@school.edu
+                  {user?.email}
                 </p>
               </div>
             </DropdownMenuLabel>
@@ -47,9 +67,7 @@ export function Header() {
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <Link href="#">
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </Link>
+            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

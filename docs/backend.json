@@ -68,7 +68,7 @@
     }
   },
   "auth": {
-    "providers": []
+    "providers": ["Email/Password"]
   },
   "firestore": {
     "/students/{studentId}": {
