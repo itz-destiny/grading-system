@@ -12,9 +12,11 @@ import {getClassAverage, getAssignmentAveragesForChart} from '@/lib/helpers';
 import {Users, BookMarked, Percent} from 'lucide-react';
 import {ClassPerformanceChart} from './components/class-performance-chart';
 import {useData} from '@/context/data-provider';
+import { useUser } from '@/hooks/use-user';
 
 export default function DashboardPage() {
   const {students, assignments, grades} = useData();
+  const { user } = useUser();
   const totalStudents = students.length;
   const totalAssignments = assignments.length;
   const classAverage = getClassAverage(grades, assignments);
@@ -24,7 +26,7 @@ export default function DashboardPage() {
     <>
       <PageHeader
         title="Dashboard"
-        description="Welcome back, here's an overview of your classes."
+        description={`Welcome back, ${user?.email || 'teacher'}! Here's an overview of your classes.`}
       />
       <div className="p-4 sm:p-6 md:p-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>

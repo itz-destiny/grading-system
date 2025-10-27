@@ -3,7 +3,7 @@
 import {useState} from 'react';
 import {useRouter} from 'next/navigation';
 import Link from 'next/link';
-import {getAuth, createUserWithEmailAndPassword} from 'firebase/auth';
+import {createUserWithEmailAndPassword} from 'firebase/auth';
 import {Button} from '@/components/ui/button';
 import {
   Card,
@@ -16,13 +16,14 @@ import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {GraduationCap} from 'lucide-react';
 import {useToast} from '@/hooks/use-toast';
+import {useAuth} from '@/firebase';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const auth = getAuth();
+  const auth = useAuth();
   const {toast} = useToast();
 
   const handleSignup = async (event: React.FormEvent) => {
@@ -30,9 +31,9 @@ export default function SignupPage() {
     setError(null);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-       toast({
+      toast({
         title: 'Signup Successful',
-        description: "Your account has been created.",
+        description: 'Your account has been created.',
       });
       router.push('/dashboard');
     } catch (e: any) {
@@ -42,7 +43,7 @@ export default function SignupPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
-       <div className="w-full max-w-md p-4">
+      <div className="w-full max-w-md p-4">
         <div className="flex justify-center mb-6">
           <div className="flex items-center gap-2">
             <GraduationCap className="w-10 h-10 text-primary" />
@@ -82,9 +83,7 @@ export default function SignupPage() {
                     onChange={e => setPassword(e.target.value)}
                   />
                 </div>
-                 {error && (
-                  <p className="text-sm text-destructive">{error}</p>
-                )}
+                {error && <p className="text-sm text-destructive">{error}</p>}
                 <Button type="submit" className="w-full">
                   Create an account
                 </Button>

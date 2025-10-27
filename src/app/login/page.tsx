@@ -3,12 +3,7 @@
 import {useState} from 'react';
 import {useRouter} from 'next/navigation';
 import Link from 'next/link';
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from 'firebase/auth';
+import {signInWithEmailAndPassword} from 'firebase/auth';
 import {Button} from '@/components/ui/button';
 import {
   Card,
@@ -21,13 +16,14 @@ import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {GraduationCap} from 'lucide-react';
 import {useToast} from '@/hooks/use-toast';
+import {useAuth} from '@/firebase';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const auth = getAuth();
+  const auth = useAuth();
   const {toast} = useToast();
 
   const handleLogin = async (event: React.FormEvent) => {
@@ -37,7 +33,7 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, email, password);
       toast({
         title: 'Login Successful',
-        description: "Welcome back!",
+        description: 'Welcome back!',
       });
       router.push('/dashboard');
     } catch (e: any) {
@@ -87,9 +83,7 @@ export default function LoginPage() {
                     onChange={e => setPassword(e.target.value)}
                   />
                 </div>
-                {error && (
-                  <p className="text-sm text-destructive">{error}</p>
-                )}
+                {error && <p className="text-sm text-destructive">{error}</p>}
                 <Button type="submit" className="w-full">
                   Login
                 </Button>
