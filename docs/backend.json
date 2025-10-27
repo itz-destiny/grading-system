@@ -1,93 +1,83 @@
-
 {
   "entities": {
-    "student": {
-      "title": "Student",
-      "description": "Represents a student enrolled in the class.",
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
       "type": "object",
+      "description": "Represents a user within the GradeAssist system.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the student."
+          "description": "Unique identifier for the user."
         },
-        "name": {
+        "email": {
           "type": "string",
-          "description": "The full name of the student."
+          "description": "Email address of the user.",
+          "format": "email"
         },
-        "avatar": {
+        "firstName": {
           "type": "string",
-          "description": "Identifier for the student's avatar image."
+          "description": "First name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Last name of the user."
+        },
+        "role": {
+          "type": "string",
+          "description": "The user's role (e.g., teacher, student)."
         }
       },
-      "required": ["name", "avatar"]
-    },
-    "assignment": {
-      "title": "Assignment",
-      "description": "Represents a class assignment.",
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the assignment."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the assignment."
-        },
-        "dueDate": {
-          "type": "string",
-          "format": "date",
-          "description": "The due date of the assignment."
-        },
-        "maxPoints": {
-          "type": "number",
-          "description": "The maximum points possible for the assignment."
-        }
-      },
-      "required": ["name", "dueDate", "maxPoints"]
-    },
-    "grade": {
-      "title": "Grade",
-      "description": "Represents a student's grade on a specific assignment.",
-      "type": "object",
-      "properties": {
-        "studentId": {
-          "type": "string",
-          "description": "Reference to the student's ID."
-        },
-        "assignmentId": {
-          "type": "string",
-          "description": "Reference to the assignment's ID."
-        },
-        "score": {
-          "type": "number",
-          "description": "The score the student received."
-        }
-      },
-      "required": ["studentId", "assignmentId", "score"]
+      "required": [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "role"
+      ]
     }
   },
   "auth": {
-    "providers": ["Email/Password"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/students/{studentId}": {
-      "schema": {
-        "$ref": "#/entities/student"
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles, with the document ID being the Firebase user ID. Enables path-based ownership for user-specific data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase user ID."
+            }
+          ]
+        }
       },
-      "description": "Stores individual student documents."
-    },
-    "/assignments/{assignmentId}": {
-      "schema": {
-        "$ref": "#/entities/assignment"
-      },
-      "description": "Stores individual assignment documents."
-    },
-    "/grades/{gradeId}": {
-      "schema": {
-        "$ref": "#/entities/grade"
-      },
-      "description": "Stores individual grade documents."
-    }
+      {
+        "path": "/roles_admin/{userId}",
+        "definition": {
+          "entityName": "adminRole",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "This collection contains documents representing users with admin roles. The existence of a document for a given user ID in this collection indicates that the user has admin privileges.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase user ID of the administrator."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support the GradeAssist application with a focus on secure user authentication and role-based access control. It leverages path-based ownership for user data and segregation for global admin roles. This structure adheres to the principles of Authorization Independence (denormalization), Structural Segregation, Access Modeling (DBAC and Membership Maps), and Data Clarity.\n\n1.  **Users Collection:** Stores user profiles using their Firebase `uid` as the document ID ( `/users/{userId}`). This provides path-based ownership and simplifies security rules for user-specific data.\n\n2.  **Admin Roles Collection:** A dedicated `/roles_admin/{userId}` collection. Presence in this collection grants admin privileges.\n\n**Authorization Independence:** No `get()` calls are necessary in the security rules because user roles are determined by their existence in the `roles_admin` collection, eliminating authorization dependencies on other documents.\n\n**QAPs (Rules are not Filters):**\n\n*   User data is stored under `/users/{userId}`, allowing secure list operations as only the currently authenticated user can access their own data.\n*   Admin privileges are granted via membership in the `/roles_admin` collection. This prevents unauthorized access to admin functions.\n\nThis structure enables secure `list` operations and avoids filtering in rules, as the collection structure inherently defines the scope of accessible data for each user role."
   }
 }

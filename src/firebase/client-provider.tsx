@@ -1,47 +1,24 @@
 'use client';
 
-import {useEffect, useState, ReactNode} from 'react';
-import {initializeFirebase} from '@/firebase';
-import {FirebaseProvider} from '@/firebase/provider';
-import type {FirebaseApp} from 'firebase/app';
-import type {Firestore} from 'firebase/firestore';
-import type {Auth} from 'firebase/auth';
-import {LoaderCircle} from 'lucide-react';
+import React, { useMemo, type ReactNode } from 'react';
+import { FirebaseProvider } from '@/firebase/provider';
+import { initializeFirebase } from '@/firebase';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
-interface FirebaseInstances {
-  app: FirebaseApp;
-  firestore: Firestore;
-  auth: Auth;
-}
-
-export function FirebaseClientProvider({children}: FirebaseClientProviderProps) {
-  const [firebase, setFirebase] = useState<FirebaseInstances | null>(null);
-
-  useEffect(() => {
-    const init = async () => {
-      const instances = await initializeFirebase();
-      setFirebase(instances);
-    };
-    init();
-  }, []);
-
-  if (!firebase) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center">
-        <LoaderCircle className="animate-spin text-primary" size={48} />
-      </div>
-    );
-  }
+export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
+  const firebaseServices = useMemo(() => {
+    // Initialize Firebase on the client side, once per component mount.
+    return initializeFirebase();
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   return (
     <FirebaseProvider
-      app={firebase.app}
-      auth={firebase.auth}
-      firestore={firebase.firestore}
+      firebaseApp={firebaseServices.firebaseApp}
+      auth={firebaseServices.auth}
+      firestore={firebaseServices.firestore}
     >
       {children}
     </FirebaseProvider>
