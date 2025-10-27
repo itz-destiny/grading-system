@@ -26,7 +26,7 @@ export default function AppLayout({children}: {children: React.ReactNode}) {
     }
   }, [user, loading, router]);
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p>Loading...</p>
@@ -34,6 +34,11 @@ export default function AppLayout({children}: {children: React.ReactNode}) {
     );
   }
 
+  if (!user) {
+    // router.push should have been called, but as a fallback, don't render children.
+    return null;
+  }
+  
   return (
     <DataProvider>
       <SidebarProvider>
